@@ -1,114 +1,340 @@
+# 🔐 NestJS JWT + Redis Authentication API
+
+**A secure, scalable authentication backend built with NestJS, PostgreSQL, Prisma, Redis, and JSON Web Tokens.**
+
+A standalone authentication API focused on modern authentication workflows, token-based authorization, session management, and secure backend architecture.
+
+Designed as a practical full-stack engineering project, demonstrating how authentication services can be structured using NestJS modules, database persistence, Redis, and stateless access tokens.
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="https://img.shields.io/badge/NestJS-Framework-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS" />
+  <img src="https://img.shields.io/badge/TypeScript-Strict%20Typing-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Redis-Session%20Storage-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## ✨ Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+Authentication is one of the most critical parts of any application. This project implements an authentication backend that combines JWT-based authorization with persistent user data and Redis-backed session management.
+
+The architecture separates authentication logic, HTTP controllers, database access, token validation, and session storage into dedicated modules.
+
+### Key features
+
+* **JWT authentication** — access tokens for authenticated API requests.
+* **Refresh token workflow** — support for renewing access tokens without requiring users to log in again.
+* **Redis session management** — session-related data stored in Redis.
+* **PostgreSQL persistence** — reliable storage for user accounts and application data.
+* **Prisma ORM** — type-safe database access and schema management.
+* **Password hashing** — bcrypt-based password hashing instead of storing plaintext passwords.
+* **Protected endpoints** — Passport JWT strategy and authentication guards.
+* **HTTP-only cookies** — a mechanism for keeping refresh tokens out of ordinary client-side JavaScript access.
+* **DTO validation** — structured request validation with NestJS pipes.
+* **Modular architecture** — separate modules and services designed for maintainability and extension.
+* **Docker-based infrastructure** — PostgreSQL and Redis can run in containers for local development.
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart TD
+    Client[Frontend / API Client]
+    Controller[NestJS Auth Controller]
+    Service[Auth Service]
+    Guard[JWT Auth Guard]
+    Strategy[JWT Strategy]
+    DB[(PostgreSQL)]
+    Prisma[Prisma Service]
+    Redis[(Redis)]
+    Client -->|Register / Login| Controller
+    Controller --> Service
+    Service --> Prisma
+    Prisma --> DB
+    Service -->|Issue tokens| Client
+    Client -->|Bearer Access Token| Guard
+    Guard --> Strategy
+    Strategy -->|Validate JWT| Guard
+    Guard --> Controller
+    Service <-->|Session operations| Redis
+```
+
+### Authentication flow
+
+**1. Registration**
+
+The client submits registration credentials. The backend validates the request, hashes the password, and creates the user record in PostgreSQL.
+
+**2. Login**
+
+The backend verifies the supplied credentials and issues authentication tokens.
+
+**3. Access token authentication**
+
+The client sends an access token in the `Authorization` header. The JWT strategy validates the token and makes the authenticated user's identity available to protected routes.
+
+**4. Session and refresh token management**
+
+Redis is used for session-related operations, while refresh tokens allow the client to obtain new access tokens according to the implemented refresh flow.
+
+**5. Protected resources**
+
+Authentication guards prevent unauthenticated requests from accessing protected endpoints.
+
+## 🛠️ Tech Stack
+
+| Technology                                           | Purpose                                      |
+| ---------------------------------------------------- | -------------------------------------------- |
+| [NestJS](https://nestjs.com/)                        | Backend framework and dependency injection   |
+| [TypeScript](https://www.typescriptlang.org/)        | Type-safe application development            |
+| [PostgreSQL](https://www.postgresql.org/)            | Relational database                          |
+| [Prisma](https://www.prisma.io/)                     | ORM, schema management, and database queries |
+| [Redis](https://redis.io/)                           | Session and temporary authentication data    |
+| [JWT](https://jwt.io/)                               | Token-based authentication                   |
+| [Passport](https://www.passportjs.org/)              | Authentication strategies                    |
+| [bcrypt](https://github.com/kelektiv/node.bcrypt.js) | Password hashing                             |
+| [Docker](https://www.docker.com/)                    | Containerized development infrastructure     |
+| [Jest](https://jestjs.io/)                           | Testing                                      |
+
+## 📁 Project Structure
+
+```text
+src/
+├── auth/
+│   ├── dto/
+│   │   ├── login.dto.ts
+│   │   └── register.dto.ts
+│   ├── guards/
+│   │   └── jwt-auth.guard.ts
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   ├── auth.module.ts
+│   └── jwt.strategy.ts
+├── common/
+│   ├── decorators/
+│   └── guards/
+├── database/
+│   └── prisma.service.ts
+├── redis/
+│   ├── redis.module.ts
+│   └── redis.service.ts
+├── users/
+├── app.module.ts
+└── main.ts
+
+prisma/
+└── schema.prisma
+
+test/
+├── app.e2e-spec.ts
+└── jest-e2e.json
+```
+
+*The structure above illustrates the main architectural components. Exact filenames may vary as the project evolves.*
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Make sure you have the following installed:
+
+* [Node.js](https://nodejs.org/) — compatible with your project dependencies
+* npm
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+* Git
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/spikedeeev/nestjs-jwt-redis-auth.git
+cd nestjs-jwt-redis-auth
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Create your local `.env` file based on the provided example:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell, you can instead run:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Configure the required values:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/DATABASE_NAME"
+JWT_SECRET="your-long-random-secret"
+REDIS_HOST="localhost"
+REDIS_PORT="6379"
+```
+
+These are example settings. Use the exact variable names required by your application and Docker configuration. Generate a strong, unique JWT secret for your local environment.
+
+**Never commit your real `.env` file or production credentials.**
+
+### 4. Start the infrastructure
+
+From the directory containing your `docker-compose.yml`, start the required services:
+
+```bash
+docker compose up -d
+```
+
+Verify the containers:
+
+```bash
+docker compose ps
+```
+
+If your Compose file is outside the repository, use the corresponding path or provide a project-specific Compose file.
+
+### 5. Prepare the database
+
+Run the database migration command configured for your Prisma setup. For a standard Prisma migration workflow:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+This command creates and applies a migration. If the project already has migrations, use the existing migration history instead of creating a duplicate initial migration.
+
+### 6. Start the development server
+
+```bash
+npm run start:dev
+```
+
+The API typically starts on `http://localhost:3000`, unless overridden by your `PORT` environment variable.
+
+## 📡 API Reference
+
+The following endpoints represent the core routes exposed by the authentication controller.
+
+| Method | Endpoint         | Description                               | Authentication |
+| ------ | ---------------- | ----------------------------------------- | -------------- |
+| `POST` | `/auth/register` | Register a new account                    | Public         |
+| `POST` | `/auth/login`    | Authenticate with credentials             | Public         |
+| `GET`  | `/auth/profile`  | Retrieve the authenticated user's profile | Required       |
+
+### Register
+
+```http
+POST /auth/register
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "developer@example.com",
+  "password": "your-strong-password"
+}
+```
+
+### Login
+
+```http
+POST /auth/login
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "developer@example.com",
+  "password": "your-strong-password"
+}
+```
+
+Use the response and cookie behavior implemented by the application to obtain and retain the issued tokens.
+
+### Access a protected route
+
+```http
+GET /auth/profile
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+The JWT authentication guard validates the access token before allowing the request to reach the protected controller.
+
+> **Note:** Refresh, logout, and session-management routes depend on the endpoints implemented in the current version. Add their exact paths and request examples here as the API evolves.
+
+## 🔒 Security Design
+
+Security is an important consideration throughout the authentication flow.
+
+* **Password storage:** passwords should be stored as hashes, never as plaintext.
+* **Token expiration:** access tokens should have a short lifetime, while refresh tokens can have a longer lifetime.
+* **Refresh token handling:** HTTP-only cookies can reduce direct JavaScript access to refresh tokens.
+* **JWT validation:** protected routes validate token signatures and expiration.
+* **Session management:** Redis can support session tracking and refresh-token revocation.
+* **Input validation:** DTOs and validation pipes help reject malformed requests.
+* **Secret management:** sensitive configuration is loaded through environment variables rather than committed source code.
+
+For production deployment, additional review is required for cookie configuration, CSRF protection, rate limiting, refresh-token rotation and reuse detection, CORS, HTTPS, logging, and secret rotation. These controls should be enabled and tested according to the actual deployment requirements.
+
+## 🧪 Testing
+
+Run the test scripts defined in `package.json`:
+
+```bash
+npm run test
+```
+
+For end-to-end tests, if configured:
+
+```bash
+npm run test:e2e
+```
+
+For code coverage, if supported by the project's scripts:
+
+```bash
+npm run test:cov
+```
+
+Testing should cover registration, login failures, token validation, protected routes, refresh-token behavior, session expiration, and logout or revocation flows where implemented.
+
+## 🗺️ Roadmap
+
+Potential areas for further development:
+
+* [ ] Comprehensive unit and end-to-end test coverage
+* [ ] Automated API documentation with Swagger
+* [ ] Refresh-token rotation and reuse detection tests
+* [ ] Session management and device-specific logout
+* [ ] Role-based authorization and permission checks
+* [ ] Rate limiting and brute-force protection
+* [ ] CI pipeline for linting, testing, and builds
+* [ ] Production deployment documentation
+
+## 🎯 Engineering Goals
+
+This project is intended to demonstrate practical backend engineering skills:
+
+* Designing modular applications with NestJS
+* Implementing authentication and authorization workflows
+* Integrating relational databases with Prisma
+* Using Redis for session-related state
+* Managing secrets and environment-specific configuration
+* Working with Docker-based development environments
+* Building maintainable APIs with TypeScript
+
+## 👨‍💻 Author
+
+**GitHub:** [@spikedeeev](https://github.com/spikedeeev)
+
+More projects are available on my [GitHub profile](https://github.com/spikedeeev).
+
+---
+
+<p align="center">
+  <sub>Built with NestJS, TypeScript, PostgreSQL, Prisma, Redis, and Docker.</sub>
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
