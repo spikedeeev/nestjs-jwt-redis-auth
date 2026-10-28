@@ -151,69 +151,38 @@ cd nestjs-jwt-redis-auth
 ### 2. Install dependencies
 
 ```bash
-npm install
+npm --prefix backend install
 ```
 
 ### 3. Configure environment variables
 
-Create your local `.env` file based on the provided example:
-
-```bash
-cp .env.example .env
-```
-
-On Windows PowerShell, you can instead run:
+From the repository root, copy both example files:
 
 ```powershell
 Copy-Item .env.example .env
+Copy-Item backend\.env.example backend\.env
 ```
 
-Configure the required values:
+Set a unique hexadecimal database password in the root `.env` (you can generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`). Set separate, randomly generated values for `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` in `backend/.env`. If running NestJS outside Docker, use the same database password in `backend/.env`'s `DATABASE_URL`. Docker Compose overrides the database and Redis hosts for the backend container.
 
-```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/DATABASE_NAME"
-JWT_SECRET="your-long-random-secret"
-REDIS_HOST="localhost"
-REDIS_PORT="6379"
-```
+**Never commit your real `.env` files or production credentials.**
 
-These are example settings. Use the exact variable names required by your application and Docker configuration. Generate a strong, unique JWT secret for your local environment.
+### 4. Start the application
 
-**Never commit your real `.env` file or production credentials.**
-
-### 4. Start the infrastructure
-
-From the directory containing your `docker-compose.yml`, start the required services:
+From the repository root, build and start the backend, PostgreSQL, and Redis:
 
 ```bash
-docker compose up -d
+docker compose up --build -d
 ```
 
-Verify the containers:
+The backend waits for PostgreSQL and Redis health checks, applies the existing Prisma migrations, and then starts the API. Check the service status and backend logs with:
 
 ```bash
 docker compose ps
+docker compose logs -f backend
 ```
 
-If your Compose file is outside the repository, use the corresponding path or provide a project-specific Compose file.
-
-### 5. Prepare the database
-
-Run the database migration command configured for your Prisma setup. For a standard Prisma migration workflow:
-
-```bash
-npx prisma migrate dev --name init
-```
-
-This command creates and applies a migration. If the project already has migrations, use the existing migration history instead of creating a duplicate initial migration.
-
-### 6. Start the development server
-
-```bash
-npm run start:dev
-```
-
-The API typically starts on `http://localhost:3000`, unless overridden by your `PORT` environment variable.
+The API is available at `http://localhost:3000`. To run the backend outside Docker for development, start the database and Redis with Compose, then run `npm run start:dev` from the `backend` directory.
 
 ## 📡 API Reference
 
